@@ -6,7 +6,7 @@ int main() {
     double aire, perimetre;
 
   
-    rayon = 5.0; // Exemple : rayon de 5.0
+    rayon = 5.0;
 
     
     aire = M_PI * rayon * rayon;
