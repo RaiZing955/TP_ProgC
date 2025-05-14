@@ -1,6 +1,6 @@
 #ifndef REPERTOIRE_H
 #define REPERTOIRE_H
 
-void lire_dossier_iteratif(const char *chemin);
+void lire_dossier(const char *nom_repertoire);
 
 #endif
