@@ -69,3 +69,10 @@ void recois_envoie_message(int socket_client) {
 
     send(socket_client, buffer, strlen(buffer), 0);
 }
+#include "serveur.h"
+
+int main() {
+    lance_serveur();
+    return 0;
+}
+
