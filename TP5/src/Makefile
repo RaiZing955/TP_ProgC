@@ -1,23 +1,10 @@
-CC ?= gcc
+all: serveur client
 
-CFLAGS=-Wall -Wextra -g
+serveur: serveur.c
+	gcc -o serveur serveur.c
 
-COBJS ?= client.o
-SOBJS ?= serveur.o 
+client: client.c
+	gcc -o client client.c
 
-.SUFFIXES: .c .o
-
-SERVER = serveur
-CLIENT = client
-
-all: $(SERVER) $(CLIENT)
-
-$(SERVER): $(SOBJS)
-	$(CC) -o $(SERVER) $(SOBJS)
-
-$(CLIENT): $(COBJS)
-	$(CC) -o $(CLIENT) $(COBJS)
-
-.c.o: 
-	$(CC) -c $*.c
-
+clean:
+	rm -f serveur client
