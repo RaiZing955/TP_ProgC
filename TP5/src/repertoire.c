@@ -6,7 +6,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 
-// Structure de file pour gérer les chemins de répertoires à traiter
+// ---------- Structures pour file ----------
+
 typedef struct Noeud {
     char chemin[1024];
     struct Noeud *suivant;
@@ -16,6 +17,8 @@ typedef struct {
     Noeud *debut;
     Noeud *fin;
 } File;
+
+// ---------- Fonctions de gestion de file ----------
 
 void enfiler(File *file, const char *chemin) {
     Noeud *nouveau = malloc(sizeof(Noeud));
@@ -42,6 +45,8 @@ char *defiler(File *file) {
     free(tmp);
     return chemin;
 }
+
+// ---------- Fonction principale de parcours itératif ----------
 
 void lire_dossier_iteratif(const char *chemin_initial) {
     File file = {0};
@@ -81,4 +86,16 @@ void lire_dossier_iteratif(const char *chemin_initial) {
         closedir(dossier);
         free(chemin);
     }
+}
+
+// ---------- Fonction main incluse ----------
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Utilisation : %s <nom_du_repertoire>\n", argv[0]);
+        return 1;
+    }
+
+    lire_dossier_iteratif(argv[1]);
+    return 0;
 }
