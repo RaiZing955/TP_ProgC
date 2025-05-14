@@ -1,42 +1,41 @@
-#include "client.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 
 #define PORT 12345
-#define BUFFER_SIZE 1024
 
-void lance_client() {
-    int client_socket;
-    struct sockaddr_in serveur_addr;
-    char buffer[BUFFER_SIZE];
+int main() {
+    int sock = 0;
+    struct sockaddr_in serv_addr;
+    char message[1024];
 
-    client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (client_socket < 0) {
-        perror("Erreur socket");
-        exit(EXIT_FAILURE);
+    // Créer le socket
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) {
+        perror("socket creation error");
+        return -1;
     }
 
-    serveur_addr.sin_family = AF_INET;
-    serveur_addr.sin_port = htons(PORT);
-    serveur_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    // Configurer l'adresse du serveur
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+    inet_pton(AF_INET, "10.0.40.4", &serv_addr.sin_addr); // IP du serveur
 
-    if (connect(client_socket, (struct sockaddr*)&serveur_addr, sizeof(serveur_addr)) < 0) {
-        perror("Erreur connect");
-        exit(EXIT_FAILURE);
+    // Connexion
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        perror("Connexion échouée");
+        return -1;
     }
 
-    printf("Votre message (max %d caractères) : ", BUFFER_SIZE - 1);
-    fgets(buffer, BUFFER_SIZE, stdin);
+    printf("Connecté au serveur !\n");
 
-    send(client_socket, buffer, strlen(buffer), 0);
+    // Boucle d'envoi de messages
+    while (1) {
+        fgets(message, sizeof(message), stdin);
+        send(sock, message, strlen(message), 0);
+    }
 
-    memset(buffer, 0, BUFFER_SIZE);
-    recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
-    printf("Message reçu : %s\n", buffer);
-
-    close(client_socket);
+    return 0;
 }
