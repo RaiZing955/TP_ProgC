@@ -1,21 +1,41 @@
 #include "repertoire.h"
 #include <stdio.h>
-#include <dirent.h>  // opendir, readdir, closedir
-#include <errno.h>   // perror
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>  // pour stat
+#include <unistd.h>    // pour getcwd
+#include <errno.h>
 
-void lire_dossier(const char *nom_repertoire) {
-    DIR *dossier = opendir(nom_repertoire);
+void lire_dossier_recursif(const char *chemin) {
+    DIR *dossier = opendir(chemin);
     if (dossier == NULL) {
-        perror("Erreur lors de l'ouverture du répertoire");
+        perror(chemin);
         return;
     }
 
     struct dirent *entree;
     while ((entree = readdir(dossier)) != NULL) {
-        // Ignore "." et ".."
-        if (entree->d_name[0] != '.' || 
-            (entree->d_name[1] != '\0' && (entree->d_name[1] != '.' || entree->d_name[2] != '\0'))) {
-            printf("%s\n", entree->d_name);
+        // Ignorer les entrées "." et ".."
+        if (strcmp(entree->d_name, ".") == 0 || strcmp(entree->d_name, "..") == 0)
+            continue;
+
+        // Construction du chemin complet
+        char chemin_complet[1024];
+        snprintf(chemin_complet, sizeof(chemin_complet), "%s/%s", chemin, entree->d_name);
+
+        // Vérification si c'est un répertoire ou un fichier
+        struct stat st;
+        if (stat(chemin_complet, &st) == -1) {
+            perror(chemin_complet);
+            continue;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            printf("Répertoire : %s\n", chemin_complet);
+            lire_dossier_recursif(chemin_complet);  // Appel récursif
+        } else {
+            printf("Fichier : %s\n", chemin_complet);
         }
     }
 
@@ -28,8 +48,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    char *nom_repertoire = argv[1];
-    lire_dossier(nom_repertoire);
+    lire_dossier_recursif(argv[1]);
 
     return 0;
 }
