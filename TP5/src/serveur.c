@@ -1,78 +1,58 @@
-#include "serveur.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <netinet/in.h>
-#include <signal.h>
 
 #define PORT 12345
-#define BUFFER_SIZE 1024
-
-int serveur_socket;
-
-void quitter(int sig) {
-    printf("\nSignal Ctrl+C capturé. Sortie du programme.\n");
-    close(serveur_socket);
-    exit(0);
-}
-
-void lance_serveur() {
-    struct sockaddr_in serveur_addr, client_addr;
-    socklen_t addr_len = sizeof(client_addr);
-
-    serveur_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serveur_socket < 0) {
-        perror("Erreur socket");
-        exit(EXIT_FAILURE);
-    }
-
-    serveur_addr.sin_family = AF_INET;
-    serveur_addr.sin_addr.s_addr = INADDR_ANY;
-    serveur_addr.sin_port = htons(PORT);
-
-    if (bind(serveur_socket, (struct sockaddr*)&serveur_addr, sizeof(serveur_addr)) < 0) {
-        perror("Erreur bind");
-        exit(EXIT_FAILURE);
-    }
-
-    listen(serveur_socket, 1);
-    printf("Serveur en attente de connexions...\n");
-
-    signal(SIGINT, quitter);
-
-    while (1) {
-        int socket_client = accept(serveur_socket, (struct sockaddr*)&client_addr, &addr_len);
-        if (socket_client < 0) {
-            perror("Erreur accept");
-            continue;
-        }
-
-        recois_envoie_message(socket_client);
-        close(socket_client);
-    }
-}
-
-void recois_envoie_message(int socket_client) {
-    char buffer[BUFFER_SIZE] = {0};
-
-    int bytes_received = recv(socket_client, buffer, BUFFER_SIZE - 1, 0);
-    if (bytes_received < 0) {
-        perror("Erreur recv");
-        return;
-    }
-
-    printf("Message reçu: %s\n", buffer);
-
-    printf("Entrez un message à envoyer au client : ");
-    fgets(buffer, BUFFER_SIZE, stdin);
-
-    send(socket_client, buffer, strlen(buffer), 0);
-}
-#include "serveur.h"
 
 int main() {
-    lance_serveur();
+    int server_fd, new_socket;
+    struct sockaddr_in address;
+    int addrlen = sizeof(address);
+    char buffer[1024] = {0};
+
+    // Créer le socket
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_fd == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Configurer l'adresse
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons(PORT);
+
+    // Lier le socket
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    // Écouter
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Serveur en attente de connexion...\n");
+
+    // Accepter une connexion
+    new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen);
+    if (new_socket < 0) {
+        perror("accept");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Client connecté !\n");
+
+    // Lire les messages
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        read(new_socket, buffer, 1024);
+        printf("Reçu : %s\n", buffer);
+    }
+
     return 0;
 }
-
